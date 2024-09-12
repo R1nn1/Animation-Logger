@@ -1,20 +1,17 @@
--- LocalScript in StarterPlayerScripts
-
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
 local animationsLogged = {}
 
--- Create GUI elements
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0.4, 0, 0.7, 0) -- Longer GUI
-Frame.Position = UDim2.new(0.3, 0, 0.15, 0)
+Frame.Size = UDim2.new(0.5, 0, 0.7, 0)
+Frame.Position = UDim2.new(0.25, 0, 0.15, 0)
 Frame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-Frame.Active = true -- Make the frame draggable
-Frame.Draggable = true -- Enable dragging
+Frame.Active = true
+Frame.Draggable = true
 Frame.Parent = ScreenGui
 
 local Title = Instance.new("TextLabel")
@@ -28,7 +25,7 @@ Title.TextSize = 24
 Title.Parent = Frame
 
 local ScrollFrame = Instance.new("ScrollingFrame")
-ScrollFrame.Size = UDim2.new(1, 0, 0.75, 0) -- Adjusted size
+ScrollFrame.Size = UDim2.new(1, 0, 0.75, 0)
 ScrollFrame.Position = UDim2.new(0, 0, 0.1, 0)
 ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 ScrollFrame.ScrollBarThickness = 8
@@ -38,8 +35,8 @@ local UIListLayout = Instance.new("UIListLayout")
 UIListLayout.Parent = ScrollFrame
 
 local CopyButton = Instance.new("TextButton")
-CopyButton.Size = UDim2.new(1, 0, 0.1, 0)
-CopyButton.Position = UDim2.new(0, 0, 0.85, 0) -- Adjusted position
+CopyButton.Size = UDim2.new(0.5, 0, 0.1, 0)
+CopyButton.Position = UDim2.new(0, 0, 0.85, 0)
 CopyButton.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
 CopyButton.Text = "Copy All"
 CopyButton.TextColor3 = Color3.new(1, 1, 1)
@@ -47,9 +44,17 @@ CopyButton.Font = Enum.Font.SourceSans
 CopyButton.TextSize = 18
 CopyButton.Parent = Frame
 
--- Function to log animation
+local ClearLogsButton = Instance.new("TextButton")
+ClearLogsButton.Size = UDim2.new(0.5, 0, 0.1, 0)
+ClearLogsButton.Position = UDim2.new(0.5, 0, 0.85, 0)
+ClearLogsButton.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+ClearLogsButton.Text = "Clear Logs"
+ClearLogsButton.TextColor3 = Color3.new(1, 1, 1)
+ClearLogsButton.Font = Enum.Font.SourceSans
+ClearLogsButton.TextSize = 18
+ClearLogsButton.Parent = Frame
+
 local function logAnimation(player, animation)
-    local animationName = animation.Name
     local animationId = animation.AnimationId
     local key = player.Name .. ":" .. animationId
 
@@ -59,18 +64,18 @@ local function logAnimation(player, animation)
         animationsLogged[key].count = animationsLogged[key].count + 1
     end
 
-    local displayText = "Player: " .. player.Name .. " - Animation: " .. animationName .. " (ID: " .. animationId .. ") - " .. animationsLogged[key].count .. "x"
+    local displayText = "Player: " .. player.Name .. " - Animation: " .. animation.Name .. " (ID: " .. animationId .. ") - " .. animationsLogged[key].count .. "x"
 
     if animationsLogged[key].button then
         animationsLogged[key].button.Text = displayText
     else
         local TextButton = Instance.new("TextButton")
-        TextButton.Size = UDim2.new(1, 0, 0, 40) -- Smaller text button
+        TextButton.Size = UDim2.new(1, 0, 0, 40)
         TextButton.BackgroundColor3 = Color3.new(0.25, 0.25, 0.25)
         TextButton.TextColor3 = Color3.new(1, 1, 1)
         TextButton.Text = displayText
         TextButton.Font = Enum.Font.SourceSans
-        TextButton.TextSize = 16 -- Smaller text size
+        TextButton.TextSize = 16
         TextButton.Parent = ScrollFrame
         animationsLogged[key].button = TextButton
 
@@ -82,7 +87,16 @@ local function logAnimation(player, animation)
     ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
 end
 
--- Function to copy all animations
+local function clearLogs()
+    for _, data in pairs(animationsLogged) do
+        if data.button then
+            data.button:Destroy()
+        end
+    end
+    animationsLogged = {}
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+end
+
 local function copyAllAnimations()
     local animationList = ""
     for key, data in pairs(animationsLogged) do
@@ -93,10 +107,9 @@ local function copyAllAnimations()
     setclipboard(animationList)
 end
 
--- Connect copy button
+ClearLogsButton.MouseButton1Click:Connect(clearLogs)
 CopyButton.MouseButton1Click:Connect(copyAllAnimations)
 
--- Detect animations
 local function onCharacterAdded(character)
     local humanoid = character:WaitForChild("Humanoid")
     humanoid.AnimationPlayed:Connect(function(animationTrack)
@@ -105,14 +118,12 @@ local function onCharacterAdded(character)
     end)
 end
 
--- Connect function to all players
 local function onPlayerAdded(newPlayer)
     newPlayer.CharacterAdded:Connect(onCharacterAdded)
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)
 
--- For existing players
 for _, existingPlayer in ipairs(Players:GetPlayers()) do
     if existingPlayer.Character then
         onCharacterAdded(existingPlayer.Character)
